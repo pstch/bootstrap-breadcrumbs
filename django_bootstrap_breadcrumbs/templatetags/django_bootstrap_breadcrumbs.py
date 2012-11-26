@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-    :copyright: Copyright 2012 by Łukasz Mierzwa
+    :copyright: Copyright 2012 by Å�ukasz Mierzwa
     :contact: l.mierzwa@gmail.com
 """
 
@@ -17,7 +17,7 @@ register = template.Library()
 CONTEXT_KEY = 'DJANGO_BREADCRUMB_LINKS'
 
 
-def breadcrumb(context, label, viewname, *args):
+def breadcrumb(context, label, viewname=None, *args):
     """
     Add link to list of breadcrumbs, usage:
 
@@ -41,12 +41,14 @@ def render_breadcrumbs(context):
     Render breadcrumbs html using twitter bootstrap css classes.
     """
     links = []
-    for (label, viewname, args) in context['request'].META.get(
-        CONTEXT_KEY, []):
-        try:
-            url = reverse(viewname=viewname, args=args)
-        except NoReverseMatch:
-            url = viewname
+    for (label, viewname, args) in context['request'].META.get(CONTEXT_KEY, []):
+        if viewname:
+            try:
+                url = reverse(viewname=viewname, args=args)
+            except NoReverseMatch:
+                url = viewname
+        else:
+            url = None
         links.append((url, _(label) if label else label))
 
     if not links:
@@ -58,10 +60,13 @@ def render_breadcrumbs(context):
     for (url, label) in links:
         ret += '<li>'
         if total > 1 and i < total:
-            ret += '<a href="%s">%s</a>' % (url, label)
+            if url:
+                ret += '<a href="%s">%s</a>' % (url, label)
+            else:
+                ret += '<a>%s</a>' % (label)
             ret += ' <span class="divider">/</span>'
         else:
-            ret += label
+            ret += '<a>%s</a>' % (label)
         ret += '</li>'
         i += 1
     ret += '</ul>'
